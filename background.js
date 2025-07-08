@@ -5,17 +5,18 @@ function updateIcon(theme) {
   chrome.action.setIcon({ path: getIconPath(theme) });
 }
 
-// Handle messages from options page and offscreen document
-chrome.runtime.onMessage.addListener((message) => {
-  const { theme } = message;
-  updateIcon(theme);
-});
+// Handle theme messages
+function handleThemeMessage({ message, theme }) {
+  if (message === "set-theme") {
+    updateIcon(theme);
+  }
+}
+
+// Handle messages from the offscreen document
+chrome.runtime.onMessage.addListener(handleThemeMessage);
 
 // Handle messages from other extensions
-chrome.runtime.onMessageExternal.addListener((message) => {
-  const { theme } = message;
-  updateIcon(theme);
-});
+chrome.runtime.onMessageExternal.addListener(handleThemeMessage);
 
 // Create offscreen document for theme detection
 async function createOffscreenDocument() {
@@ -38,5 +39,6 @@ function getIconPath(theme) {
 
 // Handle toolbar icon click
 chrome.action.onClicked.addListener(() => {
+  chrome.runtime.sendMessage({ message: "get-theme" });
   chrome.tabs.create({ url: "chrome://history/" });
 });
